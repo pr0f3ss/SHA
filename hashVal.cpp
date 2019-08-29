@@ -7,7 +7,6 @@ int main(int argc, char *argv[]){
 	SHA512 sha512;
 	std::stringstream ss;
 	ss << argv[1];
-	//abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu
 	std::cout << sha512.hash(ss.str()) << std::endl;;
 
 	return 0;
