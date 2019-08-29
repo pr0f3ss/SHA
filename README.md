@@ -1,2 +1,16 @@
 # SHA512
-C++ Implementation of SHA512 hashing algorithm
+C++ implementation of the SHA512 hashing algorithm.
+
+## Usage
+```c++
+#include "SHA512.h" //include SHA512 definition
+
+SHA512 sha512; //instantiate a SHA512 object
+sha512.hash("Example"); //returns the hash as a string
+```
+
+## Compile and run
+1. Clone the repository onto your disk: `git clone SHA512.h and SHA512.cpp` 
+2. Include the header file in your .cpp file: `#include "SHA512.h"`
+3. Compile: `g++ yourFileName.cpp SHA512.cpp` 
+4. Run: `./a.out`
