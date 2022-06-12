@@ -27,7 +27,7 @@ SHA512::~SHA512(){
 
 /**
  * Returns a message digest using the SHA512 algorithm
- * @param input message string used as an input to the SHA512 algorithm, must be < size_t bytes
+ * @param input message string used as an input to the SHA512 algorithm, must be < size_t bits
  */
 std::string SHA512::hash(const std::string input){
 	size_t nBuffer; // amount of message blocks
@@ -66,7 +66,7 @@ uint64** SHA512::preprocess(const unsigned char* input, size_t &nBuffer){
 	for(size_t i=0; i<nBuffer; i++){
 		for(size_t j=0; j<SEQUENCE_LEN; j++){
 			in = 0x0ULL;
-			for(size_t k=0; k<8; k++){
+			for(size_t k=0; k<WORD_LEN; k++){
 				index = i*128+j*8+k;
 				if(index < mLen){
 					in = in<<8 | (uint64)input[index];
@@ -95,21 +95,21 @@ void SHA512::process(uint64** buffer, size_t nBuffer, uint64* h){
 	uint64 s[WORKING_VAR_LEN];
 	uint64 w[MESSAGE_SCHEDULE_LEN]; 
 
-	memcpy(h, hPrime, 8*sizeof(uint64));
+	memcpy(h, hPrime, WORKING_VAR_LEN*sizeof(uint64));
 
 	for(size_t i=0; i<nBuffer; i++){
 		// copy over to message schedule
-		memcpy(w, buffer[i], 16*sizeof(uint64));
+		memcpy(w, buffer[i], SEQUENCE_LEN*sizeof(uint64));
 
 		// Prepare the message schedule
-		for(size_t j=16; j<80; j++){
+		for(size_t j=16; j<MESSAGE_SCHEDULE_LEN; j++){
 			w[j] = w[j-16] + sig0(w[j-15]) + w[j-7] + sig1(w[j-2]);
 		}
 		// Initialize the working variables
-		memcpy(s, h, 8*sizeof(uint64));
+		memcpy(s, h, WORKING_VAR_LEN*sizeof(uint64));
 
 		// Compression
-		for(size_t j=0; j<80; j++){
+		for(size_t j=0; j<MESSAGE_SCHEDULE_LEN; j++){
 			uint64 temp1 = s[7] + Sig1(s[4]) + Ch(s[4], s[5], s[6]) + k[j] + w[j];
 			uint64 temp2 = Sig0(s[0]) + Maj(s[0], s[1], s[2]);
 
@@ -124,7 +124,7 @@ void SHA512::process(uint64** buffer, size_t nBuffer, uint64* h){
 		}
 
 		// Compute the intermediate hash values
-		for(size_t j=0; j<8; j++){
+		for(size_t j=0; j<WORKING_VAR_LEN; j++){
 			h[j] += s[j];
 		}
 	}
@@ -148,12 +148,11 @@ void SHA512::appendLen(size_t l, uint64& lo, uint64& hi){
  */
 std::string SHA512::digest(uint64* h){
 	std::stringstream ss;
-	for(size_t i=0; i<8; i++){
+	for(size_t i=0; i<OUTPUT_LEN; i++){
 		ss << std::hex << std::setw(16) << std::setfill('0') << h[i];
 	}
 	delete[] h;
 	return ss.str();
-
 }
 	
 /**
