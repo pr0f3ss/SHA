@@ -1,3 +1,7 @@
+/** @file
+ * @brief Header file describing the function signatures and the constants of the SHA512 Algorithm
+ */
+
 #ifndef H_SHA512
 #define H_SHA512
 
@@ -37,7 +41,7 @@ private:
     static const unsigned int SEQUENCE_LEN = (1024/64);
 
 	uint64** preprocess(const unsigned char* input, size_t& nBuffer);
-	void appendLen(uint64 mLen, uint64 mp, uint64& lo, uint64& hi);
+	void appendLen(size_t l, uint64& lo, uint64& hi);
 	void process(uint64** buffer, size_t nBuffer, uint64* h);
 	std::string digest(uint64* h);
 	void freeBuffer(uint64** buffer, size_t nBuffer);
@@ -49,6 +53,7 @@ public:
 	~SHA512();
 };
 
+// Operations
 #define Ch(x,y,z) ((x&y)^(~x&z))
 #define Maj(x,y,z) ((x&y)^(x&z)^(y&z))
 #define RotR(x, n) ((x>>n)|(x<<((sizeof(x)<<3)-n)))
@@ -56,5 +61,13 @@ public:
 #define Sig1(x) ((RotR(x, 14))^(RotR(x,18))^(RotR(x, 41)))
 #define sig0(x) (RotR(x, 1)^RotR(x,8)^(x>>7))
 #define sig1(x) (RotR(x, 19)^RotR(x,61)^(x>>6))
+
+// Constants
+inline const unsigned int SEQUENCE_LEN = (1024/64);
+inline size_t const HASH_LEN = 8;
+inline size_t const WORKING_VAR_LEN = 8;
+inline size_t const MESSAGE_SCHEDULE_LEN = 80;
+inline size_t const MESSAGE_BLOCK_SIZE = 1024;
+inline size_t const CHAR_LEN_BITS = 8;
 
 #endif

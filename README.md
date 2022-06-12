@@ -1,5 +1,5 @@
 # SHA512
-C++ implementation of the SHA512 hashing algorithm.
+C++ implementation of the SHA512 hashing algorithm. Requires the message to be of size < size_t bytes.
 
 ## Usage
 ```c++
