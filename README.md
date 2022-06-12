@@ -1,4 +1,4 @@
-# SHA512
+# SHA
 C++ implementation of the SHA512, SHA384 and SHA256 hashing algorithms. Requires the messages to be of size `< size_t` bytes.
 
 ## Usage example
