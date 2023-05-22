@@ -7,6 +7,18 @@
 
 #include <string>
 
+namespace SHA_384
+{
+	constexpr unsigned int SEQUENCE_LEN = (1024 / 64);
+	constexpr size_t HASH_LEN = 8;
+	constexpr size_t WORKING_VAR_LEN = 8;
+	constexpr size_t MESSAGE_SCHEDULE_LEN = 80;
+	constexpr size_t MESSAGE_BLOCK_SIZE = 1024;
+	constexpr size_t CHAR_LEN_BITS = 8;
+	constexpr size_t OUTPUT_LEN = 6;
+	constexpr size_t WORD_LEN = 8;
+}
+
 class SHA384{
 private:
 	typedef unsigned long long uint64;
@@ -38,11 +50,11 @@ private:
               0x113f9804bef90daeULL, 0x1b710b35131c471bULL, 0x28db77f523047d84ULL, 0x32caab7b40c72493ULL, 0x3c9ebe0a15c9bebcULL, 
               0x431d67c49c100d4cULL, 0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL, 0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL};
 
-	uint64** preprocess(const unsigned char* input, size_t& nBuffer);
-	void appendLen(size_t l, uint64& lo, uint64& hi);
-	void process(uint64** buffer, size_t nBuffer, uint64* h);
-	std::string digest(uint64* h);
-	void freeBuffer(uint64** buffer, size_t nBuffer);
+    static uint64** preprocess(const unsigned char* input, size_t& nBuffer);
+    static void appendLen(size_t l, uint64& lo, uint64& hi);
+	void process(uint64** buffer, size_t nBuffer, uint64* h) const;
+    static std::string digest(const uint64* h);
+    static void freeBuffer(uint64** buffer, size_t nBuffer);
 
 	// Operations
 	#define Ch(x,y,z) ((x&y)^(~x&z))
@@ -52,19 +64,9 @@ private:
 	#define Sig1(x) ((RotR(x, 14))^(RotR(x,18))^(RotR(x, 41)))
 	#define sig0(x) (RotR(x, 1)^RotR(x,8)^(x>>7))
 	#define sig1(x) (RotR(x, 19)^RotR(x,61)^(x>>6))
-
-	// Constants
-	unsigned int const SEQUENCE_LEN = (1024/64);
-	size_t const HASH_LEN = 8;
-	size_t const WORKING_VAR_LEN = 8;
-	size_t const MESSAGE_SCHEDULE_LEN = 80;
-	size_t const MESSAGE_BLOCK_SIZE = 1024;
-	size_t const CHAR_LEN_BITS = 8;
-	size_t const OUTPUT_LEN = 6;
-	size_t const WORD_LEN = 8;
-
+	
 public:
-	std::string hash(const std::string input);
+	std::string hash(const std::string& input) const;
 
 	SHA384();
 	~SHA384();

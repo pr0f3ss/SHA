@@ -3,12 +3,9 @@
  */
 
 #include "SHA384.h"
-#include <stdio.h>
 #include <string>
-#include <string.h>
-#include <iostream>
+#include <cstring>
 #include <iomanip>
-#include <cstdint>
 #include <sstream>
 
 typedef unsigned long long uint64;
@@ -16,25 +13,23 @@ typedef unsigned long long uint64;
 /**
  * SHA384 class constructor
  */
-SHA384::SHA384(){
-}
+SHA384::SHA384() = default;
 
 /**
  * SHA384 class destructor
  */
-SHA384::~SHA384(){
-}
+SHA384::~SHA384() = default;
 
 /**
  * Returns a message digest using the SHA384 algorithm
  * @param input message string used as an input to the SHA384 algorithm, must be < size_t bits
  */
-std::string SHA384::hash(const std::string input){
+std::string SHA384::hash(const std::string& input) const{
 	size_t nBuffer; // amount of message blocks
-	uint64** buffer; // message block buffers (each 1024-bit = 16 64-bit words)
-	uint64* h = new uint64[HASH_LEN]; // buffer holding the message digest (512-bit = 8 64-bit words)
+    // message block buffers (each 1024-bit = 16 64-bit words)
+	auto* h = new uint64[SHA_384::HASH_LEN]; // buffer holding the message digest (512-bit = 8 64-bit words)
 
-	buffer = preprocess((unsigned char*) input.c_str(), nBuffer);
+	auto** buffer = preprocess(reinterpret_cast<const unsigned char*>(input.c_str()), nBuffer);
 	process(buffer, nBuffer, h);
 
 	freeBuffer(buffer, nBuffer);
@@ -48,28 +43,25 @@ std::string SHA384::hash(const std::string input){
  */
 uint64** SHA384::preprocess(const unsigned char* input, size_t &nBuffer){
 	// Padding: input || 1 || 0*k || l (in 128-bit representation)
-	size_t mLen = strlen((const char*) input);
-	size_t l = mLen * CHAR_LEN_BITS; // length of input in bits
-	size_t k = (896-1-l) % MESSAGE_BLOCK_SIZE; // length of zero bit padding (l + 1 + k = 896 mod 1024) 
-	nBuffer = (l+1+k+128) / MESSAGE_BLOCK_SIZE;
+    const size_t mLen = strlen(reinterpret_cast<const char*>(input));
+	const size_t l = mLen * SHA_384::CHAR_LEN_BITS; // length of input in bits
+	const size_t padding = (896-1-l) % SHA_384::MESSAGE_BLOCK_SIZE; // length of zero bit padding (l + 1 + k = 896 mod 1024) 
+	nBuffer = (l+1+padding+128) / SHA_384::MESSAGE_BLOCK_SIZE;
 
-	uint64** buffer = new uint64*[nBuffer];
+    auto** buffer = new uint64*[nBuffer];
 
 	for(size_t i=0; i<nBuffer; i++){
-		buffer[i] = new uint64[SEQUENCE_LEN];
+		buffer[i] = new uint64[SHA_384::SEQUENCE_LEN];
 	}
 
-	uint64 in;
-	size_t index;
-
-	// Either copy existing message, add 1 bit or add 0 bit
+    // Either copy existing message, add 1 bit or add 0 bit
 	for(size_t i=0; i<nBuffer; i++){
-		for(size_t j=0; j<SEQUENCE_LEN; j++){
-			in = 0x0ULL;
-			for(size_t k=0; k<WORD_LEN; k++){
-				index = i*128+j*8+k;
+		for(size_t j=0; j<SHA_384::SEQUENCE_LEN; j++){
+			uint64 in = 0x0ULL;
+			for(size_t s=0; s<SHA_384::WORD_LEN; s++){
+                const size_t index = i * 128 + j * 8 + s;
 				if(index < mLen){
-					in = in<<8 | (uint64)input[index];
+					in = in<<8 | static_cast<uint64>(input[index]);
 				}else if(index == mLen){
 					in = in<<8 | 0x80ULL;
 				}else{
@@ -81,7 +73,7 @@ uint64** SHA384::preprocess(const unsigned char* input, size_t &nBuffer){
 	}
 
 	// Append the length to the last two 64-bit blocks
-	appendLen(l, buffer[nBuffer-1][SEQUENCE_LEN-1], buffer[nBuffer-1][SEQUENCE_LEN-2]);
+	appendLen(l, buffer[nBuffer-1][SHA_384::SEQUENCE_LEN-1], buffer[nBuffer-1][SHA_384::SEQUENCE_LEN-2]);
 	return buffer;
 }
 
@@ -91,27 +83,28 @@ uint64** SHA384::preprocess(const unsigned char* input, size_t &nBuffer){
  * @param nBuffer amount of message blocks 
  * @param h array of output message digest
  */
-void SHA384::process(uint64** buffer, size_t nBuffer, uint64* h){
-	uint64 s[WORKING_VAR_LEN];
-	uint64 w[MESSAGE_SCHEDULE_LEN]; 
+void SHA384::process(uint64** buffer, const size_t nBuffer, uint64* h) const
+{
+	uint64 s[SHA_384::WORKING_VAR_LEN];
+	uint64 w[SHA_384::MESSAGE_SCHEDULE_LEN]; 
 
-	memcpy(h, hPrime, WORKING_VAR_LEN*sizeof(uint64));
+	memcpy(h, hPrime, SHA_384::WORKING_VAR_LEN*sizeof(uint64));
 
 	for(size_t i=0; i<nBuffer; i++){
 		// copy over to message schedule
-		memcpy(w, buffer[i], SEQUENCE_LEN*sizeof(uint64));
+		memcpy(w, buffer[i], SHA_384::SEQUENCE_LEN*sizeof(uint64));
 
 		// Prepare the message schedule
-		for(size_t j=16; j<MESSAGE_SCHEDULE_LEN; j++){
+		for(size_t j=16; j<SHA_384::MESSAGE_SCHEDULE_LEN; j++){
 			w[j] = w[j-16] + sig0(w[j-15]) + w[j-7] + sig1(w[j-2]);
 		}
 		// Initialize the working variables
-		memcpy(s, h, WORKING_VAR_LEN*sizeof(uint64));
+		memcpy(s, h, SHA_384::WORKING_VAR_LEN*sizeof(uint64));
 
 		// Compression
-		for(size_t j=0; j<MESSAGE_SCHEDULE_LEN; j++){
-			uint64 temp1 = s[7] + Sig1(s[4]) + Ch(s[4], s[5], s[6]) + k[j] + w[j];
-			uint64 temp2 = Sig0(s[0]) + Maj(s[0], s[1], s[2]);
+		for(size_t j=0; j<SHA_384::MESSAGE_SCHEDULE_LEN; j++){
+            const uint64 temp1 = s[7] + Sig1(s[4]) + Ch(s[4], s[5], s[6]) + k[j] + w[j];
+            const uint64 temp2 = Sig0(s[0]) + Maj(s[0], s[1], s[2]);
 
 			s[7] = s[6];
 			s[6] = s[5];
@@ -124,7 +117,7 @@ void SHA384::process(uint64** buffer, size_t nBuffer, uint64* h){
 		}
 
 		// Compute the intermediate hash values
-		for(size_t j=0; j<WORKING_VAR_LEN; j++){
+		for(size_t j=0; j<SHA_384::WORKING_VAR_LEN; j++){
 			h[j] += s[j];
 		}
 	}
@@ -137,7 +130,7 @@ void SHA384::process(uint64** buffer, size_t nBuffer, uint64* h){
  * @param lo pointer to second last message block
  * @param hi pointer to last message block
  */
-void SHA384::appendLen(size_t l, uint64& lo, uint64& hi){
+void SHA384::appendLen(const size_t l, uint64& lo, uint64& hi){
 	lo = l;
 	hi = 0x00ULL;
 }
@@ -146,9 +139,9 @@ void SHA384::appendLen(size_t l, uint64& lo, uint64& hi){
  * Outputs the final message digest in hex representation
  * @param h array of output message digest
  */
-std::string SHA384::digest(uint64* h){
+std::string SHA384::digest(const uint64* h){
 	std::stringstream ss;
-	for(size_t i=0; i<OUTPUT_LEN; i++){
+	for(size_t i=0; i<SHA_384::OUTPUT_LEN; i++){
 		ss << std::hex << std::setw(16) << std::setfill('0') << h[i];
 	}
 	delete[] h;
@@ -160,7 +153,7 @@ std::string SHA384::digest(uint64* h){
  * @param buffer array holding the preprocessed 
  * @param nBuffer amount of message blocks 
  */
-void SHA384::freeBuffer(uint64** buffer, size_t nBuffer){
+void SHA384::freeBuffer(uint64** buffer, const size_t nBuffer){
 	for(size_t i=0; i<nBuffer; i++){
 		delete[] buffer[i];
 	}

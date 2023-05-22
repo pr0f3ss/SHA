@@ -8,18 +8,31 @@
 #include <string>
 #include <cstdint>
 
-class SHA256{
+namespace SHA_256
+{
+	constexpr unsigned int SEQUENCE_LEN = (512 / 32);
+	constexpr size_t HASH_LEN = 8;
+	constexpr size_t WORKING_VAR_LEN = 8;
+	constexpr size_t MESSAGE_SCHEDULE_LEN = 64;
+	constexpr size_t MESSAGE_BLOCK_SIZE = 512;
+	constexpr size_t CHAR_LEN_BITS = 8;
+	constexpr size_t OUTPUT_LEN = 8;
+	constexpr size_t WORD_LEN = 4;
+}
+
+class SHA256
+{
 private:
 	typedef uint32_t uint32;
 
-	const uint32 hPrime[8] = {static_cast<unsigned int>(0xc6a09e667u), 
-								static_cast<unsigned int>(0xbb67ae85u), 
-								static_cast<unsigned int>(0x3c6ef372u), 
-								static_cast<unsigned int>(0xa54ff53au), 
-								static_cast<unsigned int>(0x510e527fu), 
-								static_cast<unsigned int>(0x9b05688cu), 
-								static_cast<unsigned int>(0x1f83d9abu), 
-								static_cast<unsigned int>(0x5be0cd19u)
+	const uint32 hPrime[8] = {static_cast<uint32>(0xc6a09e667u),
+								0xbb67ae85u, 
+								0x3c6ef372u, 
+								0xa54ff53au, 
+								0x510e527fu, 
+								0x9b05688cu, 
+								0x1f83d9abu, 
+								0x5be0cd19u
 							};
 
 	const uint32 k[64] = {
@@ -33,11 +46,11 @@ private:
 		0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
 	};
 
-	uint32** preprocess(const unsigned char* input, size_t& nBuffer);
-	void appendLen(size_t l, uint32& lo, uint32& hi);
-	void process(uint32** buffer, size_t nBuffer, uint32* h);
-	std::string digest(uint32* h);
-	void freeBuffer(uint32** buffer, size_t nBuffer);
+    static uint32** preprocess(const unsigned char* input, size_t& nBuffer);
+    static void appendLen(size_t l, uint32& lo, uint32& hi);
+	void process(uint32** buffer, size_t nBuffer, uint32* h) const;
+    static std::string digest(const uint32* h);
+    static void freeBuffer(uint32** buffer, size_t nBuffer);
 
 	// Operations
 	#define Ch_s(x,y,z) ((x&y)^(~x&z))
@@ -48,18 +61,8 @@ private:
 	#define sig0_s(x) (RotR_s(x, 7)^RotR_s(x,18)^(x>>3))
 	#define sig1_s(x) (RotR_s(x, 17)^RotR_s(x,19)^(x>>10))
 
-	// Constants
-	unsigned int const SEQUENCE_LEN = (512/32);
-	size_t const HASH_LEN = 8;
-	size_t const WORKING_VAR_LEN = 8;
-	size_t const MESSAGE_SCHEDULE_LEN = 64;
-	size_t const MESSAGE_BLOCK_SIZE = 512;
-	size_t const CHAR_LEN_BITS = 8;
-	size_t const OUTPUT_LEN = 8;
-	size_t const WORD_LEN = 4;
-
 public:
-	std::string hash(const std::string input);
+	std::string hash(const std::string& input) const;
 
 	SHA256();
 	~SHA256();
