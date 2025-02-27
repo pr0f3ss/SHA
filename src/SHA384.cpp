@@ -92,8 +92,8 @@ uint64** SHA384::preprocess(const unsigned char* input, size_t &nBuffer){
  * @param h array of output message digest
  */
 void SHA384::process(uint64** buffer, size_t nBuffer, uint64* h){
-	uint64 s[WORKING_VAR_LEN];
-	uint64 w[MESSAGE_SCHEDULE_LEN]; 
+	uint64 *s = new uint64[WORKING_VAR_LEN];
+	uint64 *w = new uint64[MESSAGE_SCHEDULE_LEN]; 
 
 	memcpy(h, hPrime, WORKING_VAR_LEN*sizeof(uint64));
 
@@ -128,7 +128,8 @@ void SHA384::process(uint64** buffer, size_t nBuffer, uint64* h){
 			h[j] += s[j];
 		}
 	}
-
+	delete[] s;
+	delete[] w;
 }
 
 /**

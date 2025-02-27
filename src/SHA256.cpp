@@ -93,8 +93,8 @@ uint32** SHA256::preprocess(const unsigned char* input, size_t &nBuffer){
  * @param h array of output message digest
  */
 void SHA256::process(uint32** buffer, size_t nBuffer, uint32* h){
-	uint32 s[WORKING_VAR_LEN];
-	uint32 w[MESSAGE_SCHEDULE_LEN]; 
+	uint32 *s = new uint32[WORKING_VAR_LEN];
+	uint32 *w = new uint32[MESSAGE_SCHEDULE_LEN]; 
 
 	memcpy(h, hPrime, WORKING_VAR_LEN*sizeof(uint32));
 
@@ -129,7 +129,8 @@ void SHA256::process(uint32** buffer, size_t nBuffer, uint32* h){
 			h[j] += s[j];
 		}
 	}
-
+	delete[] s;
+	delete[] w;
 }
 
 /**
