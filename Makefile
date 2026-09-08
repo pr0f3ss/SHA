@@ -13,7 +13,7 @@ exampleStatic:
 	make static
 	g++ src/example.cpp -Lbin/static -lsha -o bin/static-example
 
-# ========= compile static example ========
+# ========= compile shared example ========
 exampleShared:
 	make shared
 	g++ src/example.cpp -lsha -o bin/shared-example

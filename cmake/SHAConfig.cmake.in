@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+# Include the file which defines the actual imported targets (sha::static, sha::shared)
+# The path is relative to this file's installed location.
+include("${CMAKE_CURRENT_LIST_DIR}/SHAExports.cmake")
+
+# Check that the requested components (if any) were found.
+# If find_package(SHA COMPONENTS ...) is used, this ensures they are available.
+check_required_components(SHA)
